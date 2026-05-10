@@ -1,19 +1,25 @@
-import { motion } from "framer-motion";
-import { useInView } from "framer-motion";
+import emailjs from '@emailjs/browser';
+import { motion, useInView } from "framer-motion";
 import { useRef, useState } from "react";
 import { Mail, Linkedin, MapPin, Send, Download, Github } from "lucide-react";
+
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 
 const ContactSection = () => {
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, margin: "-100px" });
+
   const { toast } = useToast();
+
   const [formData, setFormData] = useState({
     name: "",
     email: "",
     message: "",
   });
+
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const contactInfo = [
@@ -43,22 +49,6 @@ const ContactSection = () => {
     },
   ];
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsSubmitting(true);
-
-    // Simulate form submission
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-
-    toast({
-      title: "Message sent!",
-      description: "Thank you for reaching out. I'll get back to you soon.",
-    });
-
-    setFormData({ name: "", email: "", message: "" });
-    setIsSubmitting(false);
-  };
-
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
@@ -68,9 +58,51 @@ const ContactSection = () => {
     }));
   };
 
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    setIsSubmitting(true);
+
+    try {
+      await emailjs.send(
+        'service_hfc8u27',
+        'template_mr20tch',
+        {
+          from_name: formData.name,
+          from_email: formData.email,
+          message: formData.message,
+        },
+        '2cdfw2vwE-00RSlPv'
+      );
+
+      toast({
+        title: "Message Sent!",
+        description: "Your message has been sent successfully.",
+      });
+
+      setFormData({
+        name: "",
+        email: "",
+        message: "",
+      });
+    } catch (error) {
+      console.error(error);
+
+      toast({
+        title: "Error",
+        description: "Failed to send message.",
+        variant: "destructive",
+      });
+    }
+
+    setIsSubmitting(false);
+  };
+
   return (
     <section id="contact" className="section-padding relative" ref={ref}>
       <div className="max-w-6xl mx-auto">
+
+        {/* Heading */}
         <motion.div
           initial={{ opacity: 0, y: 40 }}
           animate={isInView ? { opacity: 1, y: 0 } : {}}
@@ -80,14 +112,17 @@ const ContactSection = () => {
           <h2 className="font-heading text-4xl md:text-5xl font-bold mb-4">
             Get In <span className="gradient-text">Touch</span>
           </h2>
+
           <div className="w-24 h-1 bg-primary-gradient mx-auto rounded-full" />
+
           <p className="text-muted-foreground mt-4 max-w-xl mx-auto">
             Let's connect and discuss opportunities
           </p>
         </motion.div>
 
         <div className="grid lg:grid-cols-2 gap-12">
-          {/* Contact Info */}
+
+          {/* Left Side */}
           <motion.div
             initial={{ opacity: 0, x: -50 }}
             animate={isInView ? { opacity: 1, x: 0 } : {}}
@@ -95,6 +130,7 @@ const ContactSection = () => {
             className="space-y-8"
           >
             <div className="space-y-6">
+
               {contactInfo.map((item, index) => (
                 <motion.div
                   key={item.label}
@@ -106,14 +142,22 @@ const ContactSection = () => {
                     <a
                       href={item.href}
                       target={item.href.startsWith("http") ? "_blank" : undefined}
-                      rel={item.href.startsWith("http") ? "noopener noreferrer" : undefined}
+                      rel={
+                        item.href.startsWith("http")
+                          ? "noopener noreferrer"
+                          : undefined
+                      }
                       className="flex items-center gap-4 p-4 glass-card-hover group"
                     >
                       <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
                         <item.icon className="w-6 h-6 text-primary" />
                       </div>
+
                       <div>
-                        <p className="text-sm text-muted-foreground">{item.label}</p>
+                        <p className="text-sm text-muted-foreground">
+                          {item.label}
+                        </p>
+
                         <p className="text-foreground font-medium group-hover:text-primary transition-colors">
                           {item.value}
                         </p>
@@ -124,120 +168,112 @@ const ContactSection = () => {
                       <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
                         <item.icon className="w-6 h-6 text-primary" />
                       </div>
+
                       <div>
-                        <p className="text-sm text-muted-foreground">{item.label}</p>
-                        <p className="text-foreground font-medium">{item.value}</p>
+                        <p className="text-sm text-muted-foreground">
+                          {item.label}
+                        </p>
+
+                        <p className="text-foreground font-medium">
+                          {item.value}
+                        </p>
                       </div>
                     </div>
                   )}
                 </motion.div>
               ))}
+
             </div>
 
-            {/* Download Resume Button */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={isInView ? { opacity: 1, y: 0 } : {}}
-              transition={{ duration: 0.5, delay: 0.6 }}
+            {/* Resume Button */}
+            <Button
+              asChild
+              size="lg"
+              className="w-full bg-primary-gradient hover:opacity-90 transition-all duration-300"
             >
-              <a href="/Vineela_Pottabathini_Resume.pdf" download>
-                <Button variant="outline" size="lg" className="w-full group">
-                  <Download className="w-5 h-5 group-hover:animate-bounce" />
-                  Download Resume
-                </Button>
+              <a
+                href="/Vineela_Pottabathini_Resume.pdf"
+                download
+              >
+                <Download className="mr-2 h-5 w-5" />
+                Download Resume
               </a>
-            </motion.div>
+            </Button>
           </motion.div>
 
-          {/* Contact Form */}
+          {/* Right Side Form */}
           <motion.div
             initial={{ opacity: 0, x: 50 }}
             animate={isInView ? { opacity: 1, x: 0 } : {}}
             transition={{ duration: 0.8, delay: 0.4 }}
+            className="glass-card p-8"
           >
-            <form onSubmit={handleSubmit} className="glass-card p-6 md:p-8 space-y-6">
+
+            <form onSubmit={handleSubmit} className="space-y-6">
+
+              {/* Name */}
               <div>
-                <label
-                  htmlFor="name"
-                  className="block text-sm font-medium text-foreground mb-2"
-                >
+                <label className="block text-sm font-medium mb-2">
                   Name
                 </label>
-                <input
+
+                <Input
                   type="text"
-                  id="name"
                   name="name"
+                  placeholder="Your name"
                   value={formData.name}
                   onChange={handleChange}
                   required
-                  className="w-full px-4 py-3 rounded-xl bg-secondary border border-border focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-foreground placeholder:text-muted-foreground"
-                  placeholder="Your name"
                 />
               </div>
 
+              {/* Email */}
               <div>
-                <label
-                  htmlFor="email"
-                  className="block text-sm font-medium text-foreground mb-2"
-                >
+                <label className="block text-sm font-medium mb-2">
                   Email
                 </label>
-                <input
+
+                <Input
                   type="email"
-                  id="email"
                   name="email"
+                  placeholder="your.email@example.com"
                   value={formData.email}
                   onChange={handleChange}
                   required
-                  className="w-full px-4 py-3 rounded-xl bg-secondary border border-border focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-foreground placeholder:text-muted-foreground"
-                  placeholder="your.email@example.com"
                 />
               </div>
 
+              {/* Message */}
               <div>
-                <label
-                  htmlFor="message"
-                  className="block text-sm font-medium text-foreground mb-2"
-                >
+                <label className="block text-sm font-medium mb-2">
                   Message
                 </label>
-                <textarea
-                  id="message"
+
+                <Textarea
                   name="message"
+                  placeholder="Your message..."
                   value={formData.message}
                   onChange={handleChange}
+                  rows={6}
                   required
-                  rows={5}
-                  className="w-full px-4 py-3 rounded-xl bg-secondary border border-border focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-foreground placeholder:text-muted-foreground resize-none"
-                  placeholder="Your message..."
                 />
               </div>
 
+              {/* Submit */}
               <Button
                 type="submit"
-                variant="hero"
-                size="lg"
-                className="w-full"
                 disabled={isSubmitting}
+                size="lg"
+                className="w-full bg-primary-gradient hover:opacity-90 transition-all duration-300"
               >
-                {isSubmitting ? (
-                  <span className="flex items-center gap-2">
-                    <motion.span
-                      animate={{ rotate: 360 }}
-                      transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                      className="w-5 h-5 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full"
-                    />
-                    Sending...
-                  </span>
-                ) : (
-                  <>
-                    <Send className="w-5 h-5" />
-                    Send Message
-                  </>
-                )}
+                <Send className="mr-2 h-5 w-5" />
+
+                {isSubmitting ? "Sending..." : "Send Message"}
               </Button>
+
             </form>
           </motion.div>
+
         </div>
       </div>
     </section>
@@ -245,3 +281,4 @@ const ContactSection = () => {
 };
 
 export default ContactSection;
+
